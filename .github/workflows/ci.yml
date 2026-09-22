@@ -1,0 +1,11 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  component:
+    uses: integra-lib/ci-shared/.github/workflows/component.yml@v0.1.0
+    secrets: inherit
