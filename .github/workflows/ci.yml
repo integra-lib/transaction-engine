@@ -1,38 +1,27 @@
-# GitHub is a staging ground; GitLab is the target, and ci-shared drives the
-# pipeline there via `include: project:` (see .gitlab-ci.yml).
+# transaction_engine is the only component with dependencies, and on GitHub its
+# pipeline cannot get them: crc, bit-ops and dedup-cache are private repositories
+# of this organisation, and the default GITHUB_TOKEN reaches its own repository
+# only. The standalone build fetches them and dies with
+#   fatal: Could not read from remote repository.
+# so there is nothing here that could honestly be made green.
 #
-# Two GitHub limits make the shared setup unusable while the repositories are
-# private, both verified on this organisation:
-#   * a reusable workflow in a private repository could not be called at all —
-#     the run ended in startup_failure before any job began;
-#   * the default GITHUB_TOKEN only reaches its own repository, so checking out
-#     the ci-shared submodule fails with "Repository not found".
+# GitHub is a staging ground; GitLab is the target, and there a job token can
+# reach sibling projects of the same group (subject to the project's job-token
+# allowlist). The GitLab pipeline in .gitlab-ci.yml covers this component.
 #
-# So this workflow is self-contained and does what it can prove: it builds and
-# tests. Formatting and clang-tidy run through pre-commit locally and in the
-# GitLab pipeline, where the shared configs are reachable.
+# Until then the component is verified locally — 33 tests under gcc and clang,
+# plus a consumer project that links it against the three real components.
 
 name: ci
 
 on:
-  pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  build:
+  note:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - compiler: gcc
-            cxx: g++
-          - compiler: clang
-            cxx: clang++
-    name: build (${{ matrix.compiler }})
     steps:
-      - uses: actions/checkout@v4
-      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
-      - run: cmake --build build -j
-      - run: ctest --test-dir build --output-on-failure
+      - run: |
+          echo "Not run on GitHub: the private sibling components are unreachable" >&2
+          echo "from a workflow token. See the comment in this file." >&2
+          exit 1
