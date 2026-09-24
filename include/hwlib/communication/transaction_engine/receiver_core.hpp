@@ -3,11 +3,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <integra/dedup_cache.hpp>
-#include <integra/transaction_engine/frame.hpp>
+#include <hwlib/communication/transaction_engine/frame.hpp>
+#include <hwlib/data_structures/dedup_cache.hpp>
 #include <span>
 
-namespace integra
+namespace hwlib::communication
 {
 
 // Pure, platform-agnostic transaction responder. Validates the frame,
@@ -58,7 +58,7 @@ public:
 private:
     HandlerFn m_handler;
     SendAckFn m_sendAck;
-    DedupCache<DEDUP_CAPACITY> m_dedup;
+    hwlib::data_structures::DedupCache<DEDUP_CAPACITY> m_dedup;
 };
 
-} // namespace integra
+} // namespace hwlib::communication

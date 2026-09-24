@@ -4,7 +4,7 @@
 #include <functional>
 #include <span>
 
-namespace integra
+namespace hwlib::communication
 {
 
 /// Transport abstraction the transaction engine sends and receives raw frame
@@ -39,4 +39,4 @@ public:
     virtual void SetReceiverReceiveHandler(std::function<void(std::span<const std::uint8_t>)> handler) = 0;
 };
 
-} // namespace integra
+} // namespace hwlib::communication

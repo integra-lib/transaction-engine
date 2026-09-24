@@ -4,12 +4,12 @@
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <integra/transaction_engine/frame.hpp>
+#include <hwlib/communication/transaction_engine/frame.hpp>
 #include <limits>
 #include <optional>
 #include <span>
 
-namespace integra
+namespace hwlib::communication
 {
 
 struct ReliableEventSenderConfig
@@ -267,4 +267,4 @@ private:
     std::array<Slot, MAX_IN_FLIGHT> m_slots{};
 };
 
-} // namespace integra
+} // namespace hwlib::communication

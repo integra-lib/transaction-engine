@@ -1,5 +1,5 @@
 {
-  "name": "integra-transaction-engine",
+  "name": "hwlib-transaction-engine",
   "private": true,
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",

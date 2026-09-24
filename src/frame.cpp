@@ -1,11 +1,11 @@
 #include <cstddef>
 #include <cstdint>
-#include <integra/bit_ops.hpp>
-#include <integra/crc.hpp>
-#include <integra/transaction_engine/frame.hpp>
+#include <hwlib/algorithms/crc.hpp>
+#include <hwlib/communication/transaction_engine/frame.hpp>
+#include <hwlib/utilities/bit_ops.hpp>
 #include <span>
 
-namespace integra
+namespace hwlib::communication
 {
 
 namespace
@@ -24,26 +24,26 @@ constexpr std::size_t PAYLOAD_LEN_OFFSET = 9U;
 // Internal helpers: callers guarantee offset + field width fits in the span before calling.
 void WriteU16Le(std::span<std::uint8_t> out, std::size_t offset, std::uint16_t value)
 {
-    out[offset]     = GetByteByIndex<0>(value);
-    out[offset + 1] = GetByteByIndex<1>(value);
+    out[offset]     = hwlib::utilities::GetByteByIndex<0>(value);
+    out[offset + 1] = hwlib::utilities::GetByteByIndex<1>(value);
 }
 
 void WriteU32Le(std::span<std::uint8_t> out, std::size_t offset, std::uint32_t value)
 {
-    out[offset]     = GetByteByIndex<0>(value);
-    out[offset + 1] = GetByteByIndex<1>(value);
-    out[offset + 2] = GetByteByIndex<2>(value);
-    out[offset + 3] = GetByteByIndex<3>(value);
+    out[offset]     = hwlib::utilities::GetByteByIndex<0>(value);
+    out[offset + 1] = hwlib::utilities::GetByteByIndex<1>(value);
+    out[offset + 2] = hwlib::utilities::GetByteByIndex<2>(value);
+    out[offset + 3] = hwlib::utilities::GetByteByIndex<3>(value);
 }
 
 std::uint16_t ReadU16Le(std::span<const std::uint8_t> in, std::size_t offset)
 {
-    return AssembleBytes<std::uint16_t>(in[offset], in[offset + 1]);
+    return hwlib::utilities::AssembleBytes<std::uint16_t>(in[offset], in[offset + 1]);
 }
 
 std::uint32_t ReadU32Le(std::span<const std::uint8_t> in, std::size_t offset)
 {
-    return AssembleBytes<std::uint32_t>(in[offset], in[offset + 1], in[offset + 2], in[offset + 3]);
+    return hwlib::utilities::AssembleBytes<std::uint32_t>(in[offset], in[offset + 1], in[offset + 2], in[offset + 3]);
 }
 
 // NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
@@ -75,7 +75,7 @@ std::size_t EncodeTransactionFrame(const TransactionFrame& frame, std::span<std:
     }
     // NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 
-    const std::uint16_t crc = Crc16Ccitt(out.subspan(0U, HEADER_LEN + frame.payloadLen));
+    const std::uint16_t crc = hwlib::algorithms::Crc16Ccitt(out.subspan(0U, HEADER_LEN + frame.payloadLen));
     WriteU16Le(out, HEADER_LEN + frame.payloadLen, crc);
 
     return total;
@@ -100,7 +100,7 @@ bool DecodeTransactionFrame(std::span<const std::uint8_t> in, TransactionFrame& 
         return false;
     }
 
-    const std::uint16_t expectedCrc = Crc16Ccitt(in.subspan(0U, HEADER_LEN + payloadLen));
+    const std::uint16_t expectedCrc = hwlib::algorithms::Crc16Ccitt(in.subspan(0U, HEADER_LEN + payloadLen));
     const std::uint16_t actualCrc   = ReadU16Le(in, HEADER_LEN + payloadLen);
     if (expectedCrc != actualCrc)
     {
@@ -122,4 +122,4 @@ bool DecodeTransactionFrame(std::span<const std::uint8_t> in, TransactionFrame& 
     return true;
 }
 
-} // namespace integra
+} // namespace hwlib::communication

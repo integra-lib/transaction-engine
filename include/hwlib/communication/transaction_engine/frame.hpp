@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <span>
 
-namespace integra
+namespace hwlib::communication
 {
 
 inline constexpr std::size_t TRANSACTION_MAX_PAYLOAD_LEN = 64U;
@@ -37,4 +37,4 @@ inline constexpr std::uint8_t TRANSACTION_ACK_TYPE = 0xFFU;
 // or an inconsistent length field.
 [[nodiscard]] bool DecodeTransactionFrame(std::span<const std::uint8_t> in, TransactionFrame& outFrame);
 
-} // namespace integra
+} // namespace hwlib::communication

@@ -2,7 +2,7 @@
 
 #include <array>
 #include <cstdint>
-#include <integra/transaction_engine.hpp>
+#include <hwlib/communication/transaction_engine.hpp>
 #include <span>
 #include <vector>
 
@@ -22,9 +22,9 @@ protected:
     std::vector<std::uint32_t> acked;
 
     template<std::size_t DEDUP_CAPACITY = 16U>
-    integra::ReliableEventReceiverCore<DEDUP_CAPACITY> MakeReceiver()
+    hwlib::communication::ReliableEventReceiverCore<DEDUP_CAPACITY> MakeReceiver()
     {
-        return integra::ReliableEventReceiverCore<DEDUP_CAPACITY>{
+        return hwlib::communication::ReliableEventReceiverCore<DEDUP_CAPACITY>{
             [this](std::uint8_t type, std::span<const std::uint8_t> payload) {
                 delivered.push_back({
                     type, {payload.begin(), payload.end()}
@@ -36,14 +36,14 @@ protected:
     static std::vector<std::uint8_t> EncodeFrame(std::uint32_t txnId, std::uint8_t type,
                                                  std::span<const std::uint8_t> payload)
     {
-        integra::TransactionFrame frame{};
+        hwlib::communication::TransactionFrame frame{};
         frame.txnId      = txnId;
         frame.type       = type;
         frame.payloadLen = static_cast<std::uint16_t>(payload.size());
         std::ranges::copy(payload, frame.payload.begin());
 
-        std::array<std::uint8_t, integra::TRANSACTION_MAX_FRAME_LEN> buf{};
-        const std::size_t len = integra::EncodeTransactionFrame(frame, buf);
+        std::array<std::uint8_t, hwlib::communication::TRANSACTION_MAX_FRAME_LEN> buf{};
+        const std::size_t len = hwlib::communication::EncodeTransactionFrame(frame, buf);
         return {buf.begin(), buf.begin() + static_cast<std::ptrdiff_t>(len)};
     }
 };
@@ -113,7 +113,7 @@ TEST_F(ReceiverFixture, DropsAMalformedFrame)
 TEST_F(ReceiverFixture, IgnoresAnAckFrame)
 {
     auto receiver  = MakeReceiver();
-    const auto raw = EncodeFrame(42U, integra::TRANSACTION_ACK_TYPE, {});
+    const auto raw = EncodeFrame(42U, hwlib::communication::TRANSACTION_ACK_TYPE, {});
 
     receiver.OnFrameReceived(raw);
 
@@ -138,12 +138,12 @@ TEST_F(ReceiverFixture, DispatchesAgainOnceTheIdIsEvictedFromTheCache)
 TEST_F(ReceiverFixture, DeliversAMaximumPayload)
 {
     auto receiver = MakeReceiver();
-    const std::array<std::uint8_t, integra::TRANSACTION_MAX_PAYLOAD_LEN> payload{};
+    const std::array<std::uint8_t, hwlib::communication::TRANSACTION_MAX_PAYLOAD_LEN> payload{};
 
     receiver.OnFrameReceived(EncodeFrame(7U, 0x10U, payload));
 
     ASSERT_EQ(delivered.size(), 1U);
-    EXPECT_EQ(delivered[0].payload.size(), integra::TRANSACTION_MAX_PAYLOAD_LEN);
+    EXPECT_EQ(delivered[0].payload.size(), hwlib::communication::TRANSACTION_MAX_PAYLOAD_LEN);
 }
 
 } // namespace

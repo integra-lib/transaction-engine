@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
-#include <integra/transaction_engine.hpp>
+#include <hwlib/communication/transaction_engine.hpp>
 #include <vector>
 
 namespace
@@ -12,15 +12,16 @@ constexpr std::uint16_t DEVICE_ID = 0x00ABU;
 class SenderFixture : public ::testing::Test
 {
 protected:
-    std::vector<integra::TransactionFrame> sent;
+    std::vector<hwlib::communication::TransactionFrame> sent;
     std::vector<std::uint32_t> confirmed;
     std::vector<std::uint32_t> failed;
 
     template<std::size_t MAX_IN_FLIGHT = 2U>
-    integra::ReliableEventSenderCore<MAX_IN_FLIGHT> MakeSender(integra::ReliableEventSenderConfig cfg = {})
+    hwlib::communication::ReliableEventSenderCore<MAX_IN_FLIGHT> MakeSender(
+        hwlib::communication::ReliableEventSenderConfig cfg = {})
     {
-        integra::ReliableEventSenderCore<MAX_IN_FLIGHT> sender{
-            DEVICE_ID, [this](const integra::TransactionFrame& frame) { sent.push_back(frame); }, cfg};
+        hwlib::communication::ReliableEventSenderCore<MAX_IN_FLIGHT> sender{
+            DEVICE_ID, [this](const hwlib::communication::TransactionFrame& frame) { sent.push_back(frame); }, cfg};
         sender.SetOnConfirmed([this](std::uint32_t txnId) { confirmed.push_back(txnId); });
         sender.SetOnFailed([this](std::uint32_t txnId) { failed.push_back(txnId); });
         return sender;
@@ -63,7 +64,7 @@ TEST_F(SenderFixture, EachSubmitGetsADistinctTxnId)
 TEST_F(SenderFixture, RejectsAPayloadOverTheLimit)
 {
     auto sender = MakeSender();
-    const std::array<std::uint8_t, integra::TRANSACTION_MAX_PAYLOAD_LEN + 1U> tooBig{};
+    const std::array<std::uint8_t, hwlib::communication::TRANSACTION_MAX_PAYLOAD_LEN + 1U> tooBig{};
 
     EXPECT_FALSE(sender.Submit(0x10U, tooBig, 0U).has_value());
     EXPECT_TRUE(sent.empty());
@@ -200,7 +201,7 @@ TEST_F(SenderFixture, ResumingFromQueuedDoesNotSpendTheRetryBudget)
 
 TEST_F(SenderFixture, MaxRetryIsClampedToTheCap)
 {
-    using Sender = integra::ReliableEventSenderCore<1U>;
+    using Sender = hwlib::communication::ReliableEventSenderCore<1U>;
     auto sender  = MakeSender<1U>({.baseTimeoutMs = 1U, .maxRetry = 200U});
     std::ignore  = sender.Submit(0x10U, {}, 0U);
 
@@ -221,7 +222,7 @@ TEST_F(SenderFixture, MaxRetryIsClampedToTheCap)
 // out" and the transaction would burn its last attempt instantly.
 TEST_F(SenderFixture, BackoffSaturatesInsteadOfWrappingToZero)
 {
-    using Sender       = integra::ReliableEventSenderCore<1U>;
+    using Sender       = hwlib::communication::ReliableEventSenderCore<1U>;
     constexpr auto CAP = Sender::MAX_RETRY_CAP; // 31
     auto sender        = MakeSender<1U>({.baseTimeoutMs = 500U, .maxRetry = CAP});
     std::ignore        = sender.Submit(0x10U, {}, 0U);

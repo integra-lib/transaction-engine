@@ -2,23 +2,23 @@
 
 Transaction protocol over an unreliable link: acknowledged send, retries with exponential backoff, dedup on receive.
 
-Part of [integra-lib](https://github.com/integra-lib) — architecture-independent C++20
+Part of [hwlib](https://github.com/integra-lib) — architecture-independent C++20
 components shared between firmware projects. One translation unit,
 no exceptions, no RTTI.
 
 ## Use it
 
 ```bash
-git submodule add git@github.com:integra-lib/transaction-engine.git external/integra/transaction-engine
+git submodule add git@github.com:integra-lib/transaction-engine.git external/hwlib/transaction-engine
 ```
 
 ```cmake
-add_subdirectory(external/integra/transaction-engine)
-target_link_libraries(app PRIVATE Integra::transaction_engine)
+add_subdirectory(external/hwlib/transaction-engine)
+target_link_libraries(app PRIVATE Hwlib::transaction_engine)
 ```
 
 ```cpp
-#include <integra/transaction_engine.hpp>
+#include <hwlib/communication/transaction_engine.hpp>
 ```
 
 Each component carries its own include directory, so this header stays unreachable
@@ -30,21 +30,21 @@ a build that happens to work.
 Three other components, added **next to** this one rather than inside it, so that a
 consumer never ends up with two copies of the same component:
 
-* `Integra::crc` >= 0.1.0, < 0.2.0
-* `Integra::bit_ops` >= 0.1.0, < 0.2.0
-* `Integra::dedup_cache` >= 0.1.0, < 0.2.0
+* `Hwlib::crc` >= 0.1.0, < 0.2.0
+* `Hwlib::bit_ops` >= 0.1.0, < 0.2.0
+* `Hwlib::dedup_cache` >= 0.1.0, < 0.2.0
 
 ```bash
 for c in crc bit-ops dedup-cache; do
-  git submodule add git@github.com:integra-lib/$c.git external/integra/$c
+  git submodule add git@github.com:integra-lib/$c.git external/hwlib/$c
 done
 ```
 
 ```cmake
-add_subdirectory(external/integra/crc)
-add_subdirectory(external/integra/bit-ops)
-add_subdirectory(external/integra/dedup-cache)
-add_subdirectory(external/integra/transaction-engine)   # after its dependencies
+add_subdirectory(external/hwlib/crc)
+add_subdirectory(external/hwlib/bit-ops)
+add_subdirectory(external/hwlib/dedup-cache)
+add_subdirectory(external/hwlib/transaction-engine)   # after its dependencies
 ```
 
 Missing, or outside the range, they stop the CMake configure with a message naming
@@ -65,9 +65,9 @@ Every component is released on its own, tagged `vX.Y.Z`. Pre-1.0, a minor releas
 break the API, which is why dependants accept a single minor.
 
 ```bash
-git -C external/integra/transaction-engine fetch --tags
-git -C external/integra/transaction-engine checkout v0.2.0
-git add external/integra/transaction-engine && git commit -m "build: bump transaction-engine to v0.2.0"
+git -C external/hwlib/transaction-engine fetch --tags
+git -C external/hwlib/transaction-engine checkout v0.2.0
+git add external/hwlib/transaction-engine && git commit -m "build: bump transaction-engine to v0.2.0"
 ```
 
 ## In a consumer's CI
